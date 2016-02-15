@@ -16,7 +16,6 @@ import java.util.*;
  * Created by Andrea Patelli on 12/02/2016.
  */
 public class SocketSourceTaskTest {
-    Logger log = LoggerFactory.getLogger(SocketSourceTaskTest.class);
     private SocketSourceTask task;
 
     @Before
@@ -42,13 +41,21 @@ public class SocketSourceTaskTest {
         Socket producer = new Socket("localhost", 12345);
         PrintWriter out = new PrintWriter(producer.getOutputStream(), true);
         List<String> original = new ArrayList<>();
-        for (int i = 0; i < 99; i++) {
+        int items = new Random().nextInt(100);
+        for (int i = 0; i < items; i++) {
             String s = UUID.randomUUID().toString();
             out.println(s);
             original.add(s);
             out.flush();
         }
-        List<SourceRecord> records = task.poll();
+        List<SourceRecord> records = new ArrayList<>();
+        List<SourceRecord> poll;
+        do {
+            poll = task.poll();
+            org.junit.Assert.assertTrue(poll.size() < 100);
+            records.addAll(poll);
+        } while (records.size() != items);
+
         org.junit.Assert.assertEquals(original.size(), records.size());
         for (int i = 0; i < records.size(); i++) {
             String actual = ((Struct) records.get(i).value()).get("message").toString();
@@ -65,7 +72,8 @@ public class SocketSourceTaskTest {
         Socket producer = new Socket("localhost", 12345);
         PrintWriter out = new PrintWriter(producer.getOutputStream(), true);
         List<String> original = new ArrayList<>();
-        for (int i = 0; i < 10000; i++) {
+        int items = new Random().nextInt(50000) + 100;
+        for (int i = 0; i < items; i++) {
             String s = UUID.randomUUID().toString();
             out.println(s);
             original.add(s);
@@ -96,7 +104,8 @@ public class SocketSourceTaskTest {
         Socket producer = new Socket("localhost", 12345);
         PrintWriter out = new PrintWriter(producer.getOutputStream(), true);
         List<String> original = new ArrayList<>();
-        for (int i = 0; i < 10000; i++) {
+        int items = new Random().nextInt(25000) + 100;
+        for (int i = 0; i < items; i++) {
             String s = UUID.randomUUID().toString();
             out.println(s);
             original.add(s);
@@ -110,7 +119,8 @@ public class SocketSourceTaskTest {
         // reconnect and write again
         producer = new Socket("localhost", 12345);
         out = new PrintWriter(producer.getOutputStream(), true);
-        for (int i = 0; i < 10000; i++) {
+        items = new Random().nextInt(25000) + 100;
+        for (int i = 0; i < items; i++) {
             String s = UUID.randomUUID().toString();
             out.println(s);
             original.add(s);
@@ -148,7 +158,8 @@ public class SocketSourceTaskTest {
         }
         List<String> original = new ArrayList<>();
         PrintWriter out;
-        for (int i = 0; i < 10000; i++) {
+        int items = new Random().nextInt(50000) + 100;
+        for (int i = 0; i < items; i++) {
             out = outputs.get(new Random().nextInt(producersCount));
             String s = UUID.randomUUID().toString();
             out.println(s);
