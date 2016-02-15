@@ -26,7 +26,7 @@ public class SocketSourceTask extends SourceTask {
     private Integer batchSize = 100;
     private String schemaName;
     private String topic;
-    private SocketThread socketThread;
+    private SocketServerThread socketServerThread;
     private static Schema schema = null;
 
     @Override
@@ -64,8 +64,8 @@ public class SocketSourceTask extends SourceTask {
 
 
         log.trace("Opening Socket");
-        socketThread = new SocketThread(port);
-        new Thread(socketThread).start();
+        socketServerThread = new SocketServerThread(port);
+        new Thread(socketServerThread).start();
     }
 
     /**
@@ -78,9 +78,9 @@ public class SocketSourceTask extends SourceTask {
     public List<SourceRecord> poll() throws InterruptedException {
         List<SourceRecord> records = new ArrayList<>(0);
         // while there are new messages in the socket queue
-        while (!socketThread.messages.isEmpty() && records.size() < batchSize) {
+        while (!socketServerThread.messages.isEmpty() && records.size() < batchSize) {
             // get the message
-            String message = socketThread.messages.poll();
+            String message = socketServerThread.messages.poll();
             // creates the structured message
             Struct messageStruct = new Struct(schema);
             messageStruct.put("message", message);
@@ -97,6 +97,6 @@ public class SocketSourceTask extends SourceTask {
      */
     @Override
     public void stop() {
-        socketThread.stop();
+        socketServerThread.stop();
     }
 }

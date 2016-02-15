@@ -42,10 +42,11 @@ public class SocketSourceTaskTest {
         Socket producer = new Socket("localhost", 12345);
         PrintWriter out = new PrintWriter(producer.getOutputStream(), true);
         List<String> original = new ArrayList<>();
-        for (int i = 0; i < 50; i++) {
+        for (int i = 0; i < 99; i++) {
             String s = UUID.randomUUID().toString();
             out.println(s);
             original.add(s);
+            out.flush();
         }
         List<SourceRecord> records = task.poll();
         org.junit.Assert.assertEquals(original.size(), records.size());
@@ -54,6 +55,9 @@ public class SocketSourceTaskTest {
             String expected = original.get(i);
             org.junit.Assert.assertEquals(expected, actual);
         }
+
+        out.close();
+        producer.close();
     }
 
     @Test
@@ -65,6 +69,7 @@ public class SocketSourceTaskTest {
             String s = UUID.randomUUID().toString();
             out.println(s);
             original.add(s);
+            out.flush();
         }
 
         List<SourceRecord> records = new ArrayList<>();
@@ -81,11 +86,13 @@ public class SocketSourceTaskTest {
             String expected = original.get(i);
             org.junit.Assert.assertEquals(expected, actual);
         }
+
+        out.close();
+        producer.close();
     }
 
     @Test
     public void testWithDisconnection() throws Exception {
-        int count = 0;
         Socket producer = new Socket("localhost", 12345);
         PrintWriter out = new PrintWriter(producer.getOutputStream(), true);
         List<String> original = new ArrayList<>();
@@ -93,6 +100,7 @@ public class SocketSourceTaskTest {
             String s = UUID.randomUUID().toString();
             out.println(s);
             original.add(s);
+            out.flush();
         }
 
         // disconnect
@@ -106,6 +114,7 @@ public class SocketSourceTaskTest {
             String s = UUID.randomUUID().toString();
             out.println(s);
             original.add(s);
+            out.flush();
         }
 
         List<SourceRecord> records = new ArrayList<>();
@@ -121,6 +130,50 @@ public class SocketSourceTaskTest {
             String actual = ((Struct) records.get(i).value()).get("message").toString();
             String expected = original.get(i);
             org.junit.Assert.assertEquals(expected, actual);
+        }
+
+
+        out.close();
+        producer.close();
+    }
+
+    @Test
+    public void testMultipleProducers() throws Exception {
+        List<Socket> producers = new ArrayList<>();
+        List<PrintWriter> outputs = new ArrayList<>();
+        int producersCount = new Random().nextInt(100);
+        for (int i = 0; i < producersCount; i++) {
+            producers.add(new Socket("localhost", 12345));
+            outputs.add(new PrintWriter(producers.get(i).getOutputStream(), true));
+        }
+        List<String> original = new ArrayList<>();
+        PrintWriter out;
+        for (int i = 0; i < 10000; i++) {
+            out = outputs.get(new Random().nextInt(producersCount));
+            String s = UUID.randomUUID().toString();
+            out.println(s);
+            original.add(s);
+            out.flush();
+        }
+
+        List<SourceRecord> records = new ArrayList<>();
+        List<SourceRecord> poll;
+        do {
+            poll = task.poll();
+            records.addAll(poll);
+        } while (poll.size() > 0);
+
+        org.junit.Assert.assertEquals(original.size(), records.size());
+
+//        for (int i = 0; i < records.size(); i++) {
+//            String actual = ((Struct) records.get(i).value()).get("message").toString();
+//            String expected = original.get(i);
+//            org.junit.Assert.assertEquals(expected, actual);
+//        }
+
+        for (int i = 0; i < producersCount; i++) {
+            outputs.get(i).close();
+            producers.get(i).close();
         }
     }
 
