@@ -26,7 +26,6 @@ public class SocketThread implements Runnable {
         this.messages = new ConcurrentLinkedQueue<>();
         try {
             serverSocket = new ServerSocket(port);
-            connect();
         } catch (IOException e) {
             throw new ConnectException("Impossible to open socket on port " + port);
         }
@@ -35,6 +34,8 @@ public class SocketThread implements Runnable {
     @Override
     public void run() {
         try {
+            if (clientSocket == null)
+                connect();
             while (true) {
                 String line;
                 while ((line = input.readLine()) != null) {
@@ -42,23 +43,21 @@ public class SocketThread implements Runnable {
                 }
                 connect();
             }
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
         }
     }
 
     private void connect() throws IOException {
-        clientSocket = serverSocket.accept();
+        Socket newClient = serverSocket.accept();
+        clientSocket = newClient;
         input = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
     }
 
     public void stop() {
         try {
-            input.close();
-            clientSocket.close();
             serverSocket.close();
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
         }
     }
 }
