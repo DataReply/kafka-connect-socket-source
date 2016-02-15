@@ -1,6 +1,8 @@
 package org.apache.kafka.connect.socket;
 
 import org.apache.kafka.connect.errors.ConnectException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -10,9 +12,12 @@ import java.net.Socket;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
- * Created by Andrea Patelli on 12/02/2016.
+ * SocketThread accepts connections from a Socket and saves messages on a queue.
+ *
+ * @author Andrea Patelli
  */
 public class SocketThread implements Runnable {
+    private static final Logger log = LoggerFactory.getLogger(SocketThread.class);
     public ConcurrentLinkedQueue<String> messages;
 
     private Integer port;
@@ -21,6 +26,11 @@ public class SocketThread implements Runnable {
     private BufferedReader input;
     private Socket clientSocket;
 
+    /**
+     * Constructor of the class.
+     *
+     * @param port to use for creating the Socket
+     */
     public SocketThread(Integer port) {
         this.port = port;
         this.messages = new ConcurrentLinkedQueue<>();
@@ -31,25 +41,35 @@ public class SocketThread implements Runnable {
         }
     }
 
+    /**
+     * Run the thread.
+     */
     @Override
     public void run() {
         try {
             if (clientSocket == null)
                 connect();
+            // forever
             while (true) {
                 String line;
+                // while the connection is open
                 while ((line = input.readLine()) != null) {
+                    // add new messages to the queue
                     messages.add(line);
                 }
+                // if disconnected, wait for new connections
                 connect();
             }
         } catch (Exception e) {
+            log.error(e.getMessage());
         }
     }
 
     private void connect() throws IOException {
+        // accept connections
         Socket newClient = serverSocket.accept();
         clientSocket = newClient;
+        // create new input stream
         input = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
     }
 
@@ -57,7 +77,7 @@ public class SocketThread implements Runnable {
         try {
             serverSocket.close();
         } catch (Exception e) {
-            System.out.println(e.getMessage());
+            log.error(e.getMessage());
         }
     }
 }

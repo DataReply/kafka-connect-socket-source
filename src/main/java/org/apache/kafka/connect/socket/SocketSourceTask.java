@@ -15,7 +15,9 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Created by Andrea Patelli on 12/02/2016.
+ * SocketSourceTask is a Task that reads records from a Socket for storage in Kafka.
+ *
+ * @author Andrea Patelli
  */
 public class SocketSourceTask extends SourceTask {
     private final static Logger log = LoggerFactory.getLogger(SocketSourceTask.class);
@@ -32,6 +34,11 @@ public class SocketSourceTask extends SourceTask {
         return null;
     }
 
+    /**
+     * Start the Task. Handles configuration parsing and one-time setup of the Task.
+     *
+     * @param map initial configuration
+     */
     @Override
     public void start(Map<String, String> map) {
         try {
@@ -57,23 +64,37 @@ public class SocketSourceTask extends SourceTask {
 
 
         log.trace("Opening Socket");
-        socketThread = new SocketThread(12345);
+        socketThread = new SocketThread(port);
         new Thread(socketThread).start();
     }
 
+    /**
+     * Poll this SocketSourceTask for new records.
+     *
+     * @return a list of source records
+     * @throws InterruptedException
+     */
     @Override
     public List<SourceRecord> poll() throws InterruptedException {
         List<SourceRecord> records = new ArrayList<>(0);
+        // while there are new messages in the socket queue
         while (!socketThread.messages.isEmpty() && records.size() < batchSize) {
+            // get the message
             String message = socketThread.messages.poll();
+            // creates the structured message
             Struct messageStruct = new Struct(schema);
             messageStruct.put("message", message);
+            // creates the record
+            // no need to save offsets
             SourceRecord record = new SourceRecord(Collections.singletonMap("socket", 0), Collections.singletonMap("0", 0), topic, messageStruct.schema(), messageStruct);
             records.add(record);
         }
         return records;
     }
 
+    /**
+     * Signal this SourceTask to stop.
+     */
     @Override
     public void stop() {
         socketThread.stop();
