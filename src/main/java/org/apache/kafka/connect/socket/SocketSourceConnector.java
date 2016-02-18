@@ -92,6 +92,9 @@ public class SocketSourceConnector extends SourceConnector {
         ArrayList<Map<String, String>> configs = new ArrayList<>();
         Map<String, String> config = new HashMap<>();
         config.put(PORT, port);
+        config.put(SCHEMA_NAME, schemaName);
+        config.put(BATCH_SIZE, batchSize);
+        config.put(TOPIC, topic);
         configs.add(config);
         return configs;
     }
