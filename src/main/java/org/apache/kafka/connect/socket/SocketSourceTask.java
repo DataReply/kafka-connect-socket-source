@@ -31,7 +31,7 @@ public class SocketSourceTask extends SourceTask {
 
     @Override
     public String version() {
-        return null;
+        return new SocketSourceConnector().version();
     }
 
     /**
