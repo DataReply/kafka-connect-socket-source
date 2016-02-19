@@ -1,4 +1,4 @@
-# Kafka Connect Socket Connector
+# Kafka Connect Socket Source
 The connector is used to load data to Kafka from a Socket.
 
 # Building
