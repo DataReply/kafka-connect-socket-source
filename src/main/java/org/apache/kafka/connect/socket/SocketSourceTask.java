@@ -60,7 +60,8 @@ public class SocketSourceTask extends SourceTask {
         schema = SchemaBuilder
                 .struct()
                 .name(schemaName)
-                .field("message", Schema.OPTIONAL_STRING_SCHEMA);
+                .field("message", Schema.OPTIONAL_STRING_SCHEMA)
+                .build();
 
 
         log.trace("Opening Socket");
