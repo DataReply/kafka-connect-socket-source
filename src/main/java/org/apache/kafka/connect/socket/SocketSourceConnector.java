@@ -107,8 +107,11 @@ public class SocketSourceConnector extends SourceConnector {
 
     @Override
     public ConfigDef config() {
-
-        return null;
+        return new ConfigDef()
+                .define(PORT, ConfigDef.Type.STRING, ConfigDef.Importance.HIGH, "Server Port")
+                .define(SCHEMA_NAME, ConfigDef.Type.STRING, ConfigDef.Importance.HIGH, "Schema name")
+                .define(BATCH_SIZE, ConfigDef.Type.STRING, ConfigDef.Importance.HIGH, "Batch size")
+                .define(TOPIC, ConfigDef.Type.STRING, ConfigDef.Importance.HIGH, "Kafka Topic");
     }
 
     private void dumpConfiguration(Map<String, String> map) {
