@@ -1,5 +1,6 @@
 package org.apache.kafka.connect.socket;
 
+import org.apache.kafka.common.config.ConfigDef;
 import org.apache.kafka.common.utils.AppInfoParser;
 import org.apache.kafka.connect.connector.Task;
 import org.apache.kafka.connect.errors.ConnectException;
@@ -7,8 +8,6 @@ import org.apache.kafka.connect.source.SourceConnector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -89,14 +88,13 @@ public class SocketSourceConnector extends SourceConnector {
      */
     @Override
     public List<Map<String, String>> taskConfigs(int i) {
-        ArrayList<Map<String, String>> configs = new ArrayList<>();
-        Map<String, String> config = new HashMap<>();
-        config.put(PORT, port);
-        config.put(SCHEMA_NAME, schemaName);
-        config.put(BATCH_SIZE, batchSize);
-        config.put(TOPIC, topic);
-        configs.add(config);
-        return configs;
+        return List.of(Map.ofEntries(
+                Map.entry(PORT, port),
+                Map.entry(SCHEMA_NAME, schemaName),
+                Map.entry(BATCH_SIZE, batchSize),
+                Map.entry(TOPIC, topic)
+
+        ));
     }
 
     /**
@@ -104,6 +102,12 @@ public class SocketSourceConnector extends SourceConnector {
      */
     @Override
     public void stop() {
+    }
+
+    @Override
+    public ConfigDef config() {
+
+        return null;
     }
 
     private void dumpConfiguration(Map<String, String> map) {
