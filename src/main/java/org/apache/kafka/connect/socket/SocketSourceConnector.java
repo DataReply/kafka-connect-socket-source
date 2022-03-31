@@ -113,8 +113,6 @@ public class SocketSourceConnector extends SourceConnector {
 
     private void dumpConfiguration(Map<String, String> map) {
         log.trace("Starting connector with configuration:");
-        for (Map.Entry entry : map.entrySet()) {
-            log.trace("{}: {}", entry.getKey(), entry.getValue());
-        }
+        map.forEach((key, value) -> log.trace("{}: {}", key, value));
     }
 }
