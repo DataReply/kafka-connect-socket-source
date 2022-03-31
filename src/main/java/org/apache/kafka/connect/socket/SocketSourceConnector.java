@@ -51,22 +51,23 @@ public class SocketSourceConnector extends SourceConnector {
         log.trace("Parsing configuration");
 
         port = map.get(PORT);
-        if (port == null || port.isEmpty())
-            throw new ConnectException("Missing " + PORT + " config");
+        validateConfig(port, PORT);
 
         schemaName = map.get(SCHEMA_NAME);
-        if (schemaName == null || schemaName.isEmpty())
-            throw new ConnectException("Missing " + SCHEMA_NAME + " config");
+        validateConfig(schemaName, SCHEMA_NAME);
 
         batchSize = map.get(BATCH_SIZE);
-        if (batchSize == null || batchSize.isEmpty())
-            throw new ConnectException("Missing " + BATCH_SIZE + " config");
+        validateConfig(batchSize, BATCH_SIZE);
 
         topic = map.get(TOPIC);
-        if (topic == null || topic.isEmpty())
-            throw new ConnectException("Missing " + TOPIC + " config");
+        validateConfig(topic, TOPIC);
 
         dumpConfiguration(map);
+    }
+
+    private void validateConfig(String config, String configKey) {
+        if (config == null || config.isEmpty())
+            throw new ConnectException("Missing " + configKey + " config");
     }
 
     /**
