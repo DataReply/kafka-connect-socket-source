@@ -73,10 +73,9 @@ public class SocketSourceTask extends SourceTask {
      * Poll this SocketSourceTask for new records.
      *
      * @return a list of source records
-     * @throws InterruptedException
      */
     @Override
-    public List<SourceRecord> poll() throws InterruptedException {
+    public List<SourceRecord> poll() {
         List<SourceRecord> records = new ArrayList<>(0);
         // while there are new messages in the socket queue
         while (!socketServerThread.messages.isEmpty() && records.size() < batchSize) {
