@@ -1,5 +1,6 @@
 package org.apache.kafka.connect.socket;
 
+import org.apache.kafka.common.config.ConfigDef;
 import org.apache.kafka.common.utils.AppInfoParser;
 import org.apache.kafka.connect.connector.Task;
 import org.apache.kafka.connect.errors.ConnectException;
@@ -7,8 +8,6 @@ import org.apache.kafka.connect.source.SourceConnector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -52,22 +51,23 @@ public class SocketSourceConnector extends SourceConnector {
         log.trace("Parsing configuration");
 
         port = map.get(PORT);
-        if (port == null || port.isEmpty())
-            throw new ConnectException("Missing " + PORT + " config");
+        validateConfig(port, PORT);
 
         schemaName = map.get(SCHEMA_NAME);
-        if (schemaName == null || schemaName.isEmpty())
-            throw new ConnectException("Missing " + SCHEMA_NAME + " config");
+        validateConfig(schemaName, SCHEMA_NAME);
 
         batchSize = map.get(BATCH_SIZE);
-        if (batchSize == null || batchSize.isEmpty())
-            throw new ConnectException("Missing " + BATCH_SIZE + " config");
+        validateConfig(batchSize, BATCH_SIZE);
 
         topic = map.get(TOPIC);
-        if (topic == null || topic.isEmpty())
-            throw new ConnectException("Missing " + TOPIC + " config");
+        validateConfig(topic, TOPIC);
 
         dumpConfiguration(map);
+    }
+
+    private void validateConfig(String config, String configKey) {
+        if (config == null || config.isEmpty())
+            throw new ConnectException("Missing " + configKey + " config");
     }
 
     /**
@@ -89,14 +89,13 @@ public class SocketSourceConnector extends SourceConnector {
      */
     @Override
     public List<Map<String, String>> taskConfigs(int i) {
-        ArrayList<Map<String, String>> configs = new ArrayList<>();
-        Map<String, String> config = new HashMap<>();
-        config.put(PORT, port);
-        config.put(SCHEMA_NAME, schemaName);
-        config.put(BATCH_SIZE, batchSize);
-        config.put(TOPIC, topic);
-        configs.add(config);
-        return configs;
+        return List.of(Map.ofEntries(
+                Map.entry(PORT, port),
+                Map.entry(SCHEMA_NAME, schemaName),
+                Map.entry(BATCH_SIZE, batchSize),
+                Map.entry(TOPIC, topic)
+
+        ));
     }
 
     /**
@@ -106,10 +105,17 @@ public class SocketSourceConnector extends SourceConnector {
     public void stop() {
     }
 
+    @Override
+    public ConfigDef config() {
+        return new ConfigDef()
+                .define(PORT, ConfigDef.Type.STRING, ConfigDef.Importance.HIGH, "Server Port")
+                .define(SCHEMA_NAME, ConfigDef.Type.STRING, ConfigDef.Importance.HIGH, "Schema name")
+                .define(BATCH_SIZE, ConfigDef.Type.STRING, ConfigDef.Importance.HIGH, "Batch size")
+                .define(TOPIC, ConfigDef.Type.STRING, ConfigDef.Importance.HIGH, "Kafka Topic");
+    }
+
     private void dumpConfiguration(Map<String, String> map) {
         log.trace("Starting connector with configuration:");
-        for (Map.Entry entry : map.entrySet()) {
-            log.trace("{}: {}", entry.getKey(), entry.getValue());
-        }
+        map.forEach((key, value) -> log.trace("{}: {}", key, value));
     }
 }

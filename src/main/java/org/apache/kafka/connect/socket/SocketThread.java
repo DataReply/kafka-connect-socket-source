@@ -17,8 +17,8 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  */
 public class SocketThread extends Thread {
     private static final Logger log = LoggerFactory.getLogger(SocketThread.class);
-    private Socket clientSocket;
-    private ConcurrentLinkedQueue<String> messages;
+    private final Socket clientSocket;
+    private final ConcurrentLinkedQueue<String> messages;
 
     public SocketThread(Socket clientSocket, ConcurrentLinkedQueue<String> messages) {
         this.clientSocket = clientSocket;

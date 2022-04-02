@@ -22,9 +22,7 @@ import java.util.Map;
 public class SocketSourceTask extends SourceTask {
     private final static Logger log = LoggerFactory.getLogger(SocketSourceTask.class);
 
-    private Integer port;
     private Integer batchSize = 100;
-    private String schemaName;
     private String topic;
     private SocketServerThread socketServerThread;
     private static Schema schema = null;
@@ -41,6 +39,7 @@ public class SocketSourceTask extends SourceTask {
      */
     @Override
     public void start(Map<String, String> map) {
+        int port;
         try {
             port = Integer.parseInt(map.get(SocketSourceConnector.PORT));
         } catch (Exception e) {
@@ -53,7 +52,7 @@ public class SocketSourceTask extends SourceTask {
             throw new ConnectException(SocketSourceConnector.BATCH_SIZE + " config should be an Integer");
         }
 
-        schemaName = map.get(SocketSourceConnector.SCHEMA_NAME);
+        String schemaName = map.get(SocketSourceConnector.SCHEMA_NAME);
         topic = map.get(SocketSourceConnector.TOPIC);
 
         log.trace("Creating schema");
@@ -73,10 +72,9 @@ public class SocketSourceTask extends SourceTask {
      * Poll this SocketSourceTask for new records.
      *
      * @return a list of source records
-     * @throws InterruptedException
      */
     @Override
-    public List<SourceRecord> poll() throws InterruptedException {
+    public List<SourceRecord> poll() {
         List<SourceRecord> records = new ArrayList<>(0);
         // while there are new messages in the socket queue
         while (!socketServerThread.messages.isEmpty() && records.size() < batchSize) {
@@ -87,7 +85,13 @@ public class SocketSourceTask extends SourceTask {
             messageStruct.put("message", message);
             // creates the record
             // no need to save offsets
-            SourceRecord record = new SourceRecord(Collections.singletonMap("socket", 0), Collections.singletonMap("0", 0), topic, messageStruct.schema(), messageStruct);
+            SourceRecord record = new SourceRecord(
+                    Collections.singletonMap("socket", 0),
+                    Collections.singletonMap("0", 0),
+                    topic,
+                    messageStruct.schema(),
+                    messageStruct
+            );
             records.add(record);
         }
         return records;

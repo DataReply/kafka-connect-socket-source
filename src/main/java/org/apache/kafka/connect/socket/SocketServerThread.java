@@ -18,8 +18,7 @@ public class SocketServerThread implements Runnable {
     private static final Logger log = LoggerFactory.getLogger(SocketServerThread.class);
     protected ConcurrentLinkedQueue<String> messages;
 
-    private ServerSocket serverSocket;
-    private Socket clientSocket;
+    private final ServerSocket serverSocket;
 
     /**
      * Constructor of the class.
@@ -40,10 +39,14 @@ public class SocketServerThread implements Runnable {
      */
     @Override
     public void run() {
+        // Suppress the warning because it is not really infinite loop
+        // because this object form this class will be destroyed
+        // when the tasks are done
+        //noinspection InfiniteLoopStatement
         while (true) {
             try {
                 // waits for connections
-                clientSocket = serverSocket.accept();
+                Socket clientSocket = serverSocket.accept();
                 // when new client connected, start a new thread to handle it
                 new SocketThread(clientSocket, messages).start();
             } catch (IOException e) {
